@@ -2,9 +2,6 @@
 import { DateFilterGranularity } from "@gooddata/sdk-model";
 import { DateFilter, DateFilterOption, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
 
-const dateFrom = new Date();
-dateFrom.setMonth(dateFrom.getMonth() - 1);
-
 const availableGranularities: DateFilterGranularity[] = [
     "GDC.time.date",
     "GDC.time.month",
@@ -12,17 +9,17 @@ const availableGranularities: DateFilterGranularity[] = [
     "GDC.time.year",
 ];
 
-interface Filter {
+export interface CustomDateFilterData {
     excludeCurrentPeriod: boolean;
     selectedFilterOption?: DateFilterOption;
 }
 
-interface CustomDateFilterProps {
-    filter: Filter;
-    setFilter: (filter: Filter) => void;
+interface Props {
+    filter: CustomDateFilterData;
+    setFilter: (filter: CustomDateFilterData) => void;
 }
 
-export const CustomDateFilter = ({ filter, setFilter }: CustomDateFilterProps) => {
+export const CustomDateFilter = ({ filter, setFilter }: Props) => {
     const { excludeCurrentPeriod, selectedFilterOption } = filter;
     const onApply = (selectedFilterOption: DateFilterOption, excludeCurrentPeriod: boolean) => {
         setFilter({

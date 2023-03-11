@@ -1,38 +1,43 @@
-import { DateGranularity, newRelativeDateFilter } from "@gooddata/sdk-model";
+import { newMeasure, newRelativeDateFilter } from "@gooddata/sdk-model";
+import { IDataSeries, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
 import { LineChart } from "@gooddata/sdk-ui-charts";
 import { defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
-import { Card, Col, Row, Typography } from "antd";
-import React, { useState } from "react";
-import { CustomDateFilter } from "../components/controls/CustomDateFilter";
+import { Card, Col, Row, Typography, Statistic, Select } from "antd";
+import React, { useEffect, useState } from "react";
+import { CustomDateFilter, CustomDateFilterData } from "../components/controls/CustomDateFilter";
 import Page from "../components/Page";
 import { useAuth } from "../contexts/Auth";
 import { AuthStatus } from "../contexts/Auth/state";
 import * as Md from "../md/full";
 import styles from "./Home.module.scss";
-import { LoadingComponent, ErrorComponent, useExecutionDataView } from "@gooddata/sdk-ui";
-import { newMeasure } from "@gooddata/sdk-model";
+
+enum CalculationOptionValue {
+    MaxReverseAcrossDiffProducts = "1",
+    MinReverseAcrossDiffProducts = "2",
+    Quantiles = "3",
+}
 
 const Home: React.FC = () => {
-    // Date Filter
-    const [filter, setFilter] = useState({
-        selectedFilterOption: defaultDateFilterOptions.relativePreset![DateGranularity.month][1],
+    // Date Filter data
+    const [filter, setFilter] = useState<CustomDateFilterData>({
+        selectedFilterOption: defaultDateFilterOptions.allTime,
         excludeCurrentPeriod: false,
     });
     const { selectedFilterOption } = filter;
     const filters =
-        selectedFilterOption.type === "allTime"
+        !selectedFilterOption || selectedFilterOption?.type === "allTime"
             ? []
             : [
                   newRelativeDateFilter(
                       Md.DateDatasets.Date,
-                      selectedFilterOption.granularity,
-                      selectedFilterOption.from,
-                      selectedFilterOption.to,
+                      "GDC.time.month",
+                      selectedFilterOption.from as number,
+                      selectedFilterOption.to as number,
                   ),
               ];
 
-    // Custom Component
-    const { result, error, status } = useExecutionDataView({
+    // Custom Component data
+    const { result, status } = useExecutionDataView({
         execution: {
             seriesBy: [Md.Revenue, Md.Product.Default],
             filters,
@@ -44,7 +49,18 @@ const Home: React.FC = () => {
         willFail: false,
     });
     const measure = willFail ? newMeasure("thisDoesNotExits") : Md.TotalRevenue;
-    const measureSeries = result?.data().series().firstForMeasure(measure);
+    const [measureSeries, setMeasureSeries] = useState<IDataSeries | undefined>();
+
+    const onCalculationChanged = (value: CalculationOptionValue) => {
+        console.log(`selected ${value}`);
+    };
+
+    useEffect(() => {
+        try {
+            const data = result?.data().series().firstForMeasure(measure);
+            setMeasureSeries(data);
+        } catch (_) {}
+    }, [measure, result]);
 
     const { authStatus } = useAuth();
     if (authStatus !== AuthStatus.AUTHORIZED)
@@ -71,7 +87,7 @@ const Home: React.FC = () => {
             </Card>
 
             <div className={styles.content}>
-                <Row gutter={10} align="top">
+                <Row gutter={[20, 10]} align="top">
                     <Col span={16}>
                         <LineChart
                             filters={filters}
@@ -82,32 +98,35 @@ const Home: React.FC = () => {
                     </Col>
 
                     <Col span={8}>
-                        <Card>
-                            {status === "error" && (
-                                <div>
-                                    <div className="gd-message error">
-                                        <div className="gd-message-text">Oops, simulated error! Retry?</div>
-                                    </div>
-                                    <ErrorComponent
-                                        message="There was an error getting your execution"
-                                        description={JSON.stringify(error, null, 2)}
-                                    />
-                                </div>
-                            )}
-                            {status === "loading" && (
-                                <div>
-                                    <div className="gd-message progress">
-                                        <div className="gd-message-text">Loading…</div>
-                                    </div>
-                                    <LoadingComponent />
-                                </div>
-                            )}
+                        <Card bodyStyle={{ height: "100%" }} className={styles.customComponentWrapper}>
+                            {status === "loading" && <LoadingComponent />}
                             {status === "success" && (
-                                <Typography.Title>
-                                    <p className="kpi s-execute-kpi">
-                                        {measureSeries?.dataPoints()[0].formattedValue()}
-                                    </p>
-                                </Typography.Title>
+                                <div className={styles.inner}>
+                                    <Statistic
+                                        value={measureSeries?.dataPoints()[0].formattedValue() ?? "N/A"}
+                                    />
+                                    <div className={styles.calculationSelectWrapper}>
+                                        <Select
+                                            defaultValue={CalculationOptionValue.MaxReverseAcrossDiffProducts}
+                                            style={{ width: "100%" }}
+                                            onChange={onCalculationChanged}
+                                            options={[
+                                                {
+                                                    value: CalculationOptionValue.MaxReverseAcrossDiffProducts,
+                                                    label: "Maximum Revenue across different products",
+                                                },
+                                                {
+                                                    value: CalculationOptionValue.MinReverseAcrossDiffProducts,
+                                                    label: "Minimum Revenue across different products",
+                                                },
+                                                {
+                                                    value: CalculationOptionValue.Quantiles,
+                                                    label: "Quantiles (median would be a good default)",
+                                                },
+                                            ]}
+                                        />
+                                    </div>
+                                </div>
                             )}
                         </Card>
                     </Col>
