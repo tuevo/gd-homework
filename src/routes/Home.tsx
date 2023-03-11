@@ -1,8 +1,8 @@
 import { newMeasure, newRelativeDateFilter } from "@gooddata/sdk-model";
 import { IDataSeries, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
 import { LineChart } from "@gooddata/sdk-ui-charts";
-import { defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
-import { Card, Col, Row, Typography, Statistic, Select } from "antd";
+import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
+import { Card, Col, Row, Select, Statistic, Typography } from "antd";
 import React, { useEffect, useState } from "react";
 import { CustomDateFilter, CustomDateFilterData } from "../components/controls/CustomDateFilter";
 import Page from "../components/Page";
@@ -35,6 +35,10 @@ const Home: React.FC = () => {
                       selectedFilterOption.to as number,
                   ),
               ];
+
+    const titleSuffix = selectedFilterOption
+        ? DateFilterHelpers.getDateFilterTitle(selectedFilterOption, "en-US")
+        : "";
 
     // Custom Component data
     const { result, status } = useExecutionDataView({
@@ -72,7 +76,7 @@ const Home: React.FC = () => {
 
     return (
         <Page>
-            <Typography.Title>My Dashboard</Typography.Title>
+            <Typography.Title>My Dashboard {titleSuffix}</Typography.Title>
 
             <Card size="small">
                 <CustomDateFilter
@@ -86,7 +90,7 @@ const Home: React.FC = () => {
                 />
             </Card>
 
-            <div className={styles.content}>
+            <div className={styles.dataVisualization}>
                 <Row gutter={[20, 10]} align="top">
                     <Col span={16}>
                         <LineChart
@@ -99,12 +103,15 @@ const Home: React.FC = () => {
 
                     <Col span={8}>
                         <Card bodyStyle={{ height: "100%" }} className={styles.customComponentWrapper}>
-                            {status === "loading" && <LoadingComponent />}
-                            {status === "success" && (
-                                <div className={styles.inner}>
+                            <div className={styles.inner}>
+                                {status === "loading" && <LoadingComponent />}
+                                {status === "error" && <Statistic value="N/A" />}
+                                {status === "success" && (
                                     <Statistic
                                         value={measureSeries?.dataPoints()[0].formattedValue() ?? "N/A"}
                                     />
+                                )}
+                                {status !== "loading" && (
                                     <div className={styles.calculationSelectWrapper}>
                                         <Select
                                             defaultValue={CalculationOptionValue.MaxReverseAcrossDiffProducts}
@@ -126,8 +133,8 @@ const Home: React.FC = () => {
                                             ]}
                                         />
                                     </div>
-                                </div>
-                            )}
+                                )}
+                            </div>
                         </Card>
                     </Col>
                 </Row>
