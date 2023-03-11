@@ -1,9 +1,9 @@
-import { newMeasure, newRelativeDateFilter } from "@gooddata/sdk-model";
-import { IDataSeries, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
+import { newRelativeDateFilter } from "@gooddata/sdk-model";
+import { DataPoint, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
 import { LineChart } from "@gooddata/sdk-ui-charts";
 import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
-import { Card, Col, Row, Select, Statistic, Typography } from "antd";
-import React, { useEffect, useState } from "react";
+import { Card, Col, Row, Select, Typography } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
 import { CustomDateFilter, CustomDateFilterData } from "../components/controls/CustomDateFilter";
 import Page from "../components/Page";
 import { useAuth } from "../contexts/Auth";
@@ -11,10 +11,11 @@ import { AuthStatus } from "../contexts/Auth/state";
 import * as Md from "../md/full";
 import styles from "./Home.module.scss";
 
-enum CalculationOptionValue {
-    MaxReverseAcrossDiffProducts = "1",
-    MinReverseAcrossDiffProducts = "2",
-    Quantiles = "3",
+type RevenueData = { formattedValue: string; value: number };
+
+enum CalculationType {
+    MaxRevenueAcrossDiffProducts = "1",
+    MinRevenueAcrossDiffProducts = "2",
 }
 
 const Home: React.FC = () => {
@@ -48,23 +49,71 @@ const Home: React.FC = () => {
             slicesBy: [Md.DateDatasets.Date.Month.Short],
         },
     });
-    const [{ willFail }] = useState({
-        executionNumber: 0,
-        willFail: false,
-    });
-    const measure = willFail ? newMeasure("thisDoesNotExits") : Md.TotalRevenue;
-    const [measureSeries, setMeasureSeries] = useState<IDataSeries | undefined>();
+    const [dataPoints, setDataPoints] = useState<DataPoint[] | undefined>();
+    const [selectedCalculation, setSelectedCalculation] = useState<CalculationType>(
+        CalculationType.MaxRevenueAcrossDiffProducts,
+    );
+    const totalRevenue: RevenueData | undefined = useMemo(() => {
+        const points = (dataPoints || []).filter((p) => p.rawValue !== null && p.formattedValue() !== null);
+        if (!points.length) {
+            return undefined;
+        }
 
-    const onCalculationChanged = (value: CalculationOptionValue) => {
-        console.log(`selected ${value}`);
+        if (
+            [
+                CalculationType.MaxRevenueAcrossDiffProducts,
+                CalculationType.MinRevenueAcrossDiffProducts,
+            ].includes(selectedCalculation)
+        ) {
+            let revenue: RevenueData = {
+                value: +points[0].rawValue!.toString(),
+                formattedValue: points[0].formattedValue()!,
+            };
+
+            for (const p of points) {
+                const value = +p.rawValue!.toString();
+                const formattedValue = p.formattedValue()!;
+
+                let comparator = false;
+                switch (selectedCalculation) {
+                    case CalculationType.MaxRevenueAcrossDiffProducts:
+                        comparator = value > revenue.value;
+                        break;
+
+                    case CalculationType.MinRevenueAcrossDiffProducts:
+                        comparator = value < revenue.value;
+                        break;
+
+                    default:
+                        break;
+                }
+
+                if (comparator) {
+                    revenue = { value, formattedValue };
+                }
+            }
+
+            return revenue;
+        }
+
+        return undefined;
+    }, [selectedCalculation, dataPoints]);
+
+    const onCalculationChanged = (value: CalculationType) => {
+        setSelectedCalculation(value);
     };
 
     useEffect(() => {
         try {
-            const data = result?.data().series().firstForMeasure(measure);
-            setMeasureSeries(data);
+            const newDataPoints = result
+                ?.data()
+                .series()
+                .toArray()
+                .map((item) => item.dataPoints())
+                .flat();
+            setDataPoints(newDataPoints);
         } catch (_) {}
-    }, [measure, result]);
+    }, [result]);
 
     const { authStatus } = useAuth();
     if (authStatus !== AuthStatus.AUTHORIZED)
@@ -105,34 +154,31 @@ const Home: React.FC = () => {
                         <Card bodyStyle={{ height: "100%" }} className={styles.customComponentWrapper}>
                             <div className={styles.inner}>
                                 {status === "loading" && <LoadingComponent />}
-                                {status === "error" && <Statistic value="N/A" />}
-                                {status === "success" && (
-                                    <Statistic
-                                        value={measureSeries?.dataPoints()[0].formattedValue() ?? "N/A"}
-                                    />
-                                )}
                                 {status !== "loading" && (
-                                    <div className={styles.calculationSelectWrapper}>
-                                        <Select
-                                            defaultValue={CalculationOptionValue.MaxReverseAcrossDiffProducts}
-                                            style={{ width: "100%" }}
-                                            onChange={onCalculationChanged}
-                                            options={[
-                                                {
-                                                    value: CalculationOptionValue.MaxReverseAcrossDiffProducts,
-                                                    label: "Maximum Revenue across different products",
-                                                },
-                                                {
-                                                    value: CalculationOptionValue.MinReverseAcrossDiffProducts,
-                                                    label: "Minimum Revenue across different products",
-                                                },
-                                                {
-                                                    value: CalculationOptionValue.Quantiles,
-                                                    label: "Quantiles (median would be a good default)",
-                                                },
-                                            ]}
-                                        />
-                                    </div>
+                                    <>
+                                        <Typography.Title>
+                                            {status === "success" && totalRevenue !== undefined
+                                                ? totalRevenue.formattedValue
+                                                : "N/A"}
+                                        </Typography.Title>
+                                        <div className={styles.calculationSelectWrapper}>
+                                            <Select
+                                                defaultValue={CalculationType.MaxRevenueAcrossDiffProducts}
+                                                style={{ width: "100%" }}
+                                                onChange={onCalculationChanged}
+                                                options={[
+                                                    {
+                                                        value: CalculationType.MaxRevenueAcrossDiffProducts,
+                                                        label: "Maximum Revenue across different products",
+                                                    },
+                                                    {
+                                                        value: CalculationType.MinRevenueAcrossDiffProducts,
+                                                        label: "Minimum Revenue across different products",
+                                                    },
+                                                ]}
+                                            />
+                                        </div>
+                                    </>
                                 )}
                             </div>
                         </Card>
