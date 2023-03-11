@@ -121,7 +121,7 @@ const Home: React.FC = () => {
         return (
             <Page>
                 <Typography.Title>
-                    <Link to="/login">Login</Link> to view analytical data
+                    <Link to="/login">Login</Link> to Analytical Dashboard
                 </Typography.Title>
             </Page>
         );
@@ -144,7 +144,7 @@ const Home: React.FC = () => {
 
             <div className={styles.dataVisualization}>
                 <Row gutter={[20, 10]} align="top">
-                    <Col span={16}>
+                    <Col span={24} lg={16}>
                         <LineChart
                             filters={filters}
                             measures={[Md.Revenue]}
@@ -153,7 +153,7 @@ const Home: React.FC = () => {
                         />
                     </Col>
 
-                    <Col span={8}>
+                    <Col span={24} lg={8}>
                         <Card bodyStyle={{ height: "100%" }} className={styles.customComponentWrapper}>
                             <div className={styles.inner}>
                                 {status === "loading" && <LoadingComponent />}
