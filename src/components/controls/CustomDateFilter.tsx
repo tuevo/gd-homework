@@ -30,8 +30,9 @@ export const CustomDateFilter = ({ filter, setFilter }: CustomDateFilterProps) =
             excludeCurrentPeriod,
         });
     };
+
     return (
-        <div style={{ width: 300, margin: "auto" }}>
+        <div style={{ width: 300 }}>
             <DateFilter
                 excludeCurrentPeriod={excludeCurrentPeriod}
                 selectedFilterOption={selectedFilterOption}
