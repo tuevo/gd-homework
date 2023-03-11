@@ -4,6 +4,7 @@ import { LineChart } from "@gooddata/sdk-ui-charts";
 import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
 import { Card, Col, Row, Select, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { CustomDateFilter, CustomDateFilterData } from "../components/controls/CustomDateFilter";
 import Page from "../components/Page";
 import { useAuth } from "../contexts/Auth";
@@ -119,7 +120,9 @@ const Home: React.FC = () => {
     if (authStatus !== AuthStatus.AUTHORIZED)
         return (
             <Page>
-                <Typography.Title>Please login</Typography.Title>
+                <Typography.Title>
+                    <Link to="/login">Login</Link> to view analytical data
+                </Typography.Title>
             </Page>
         );
 
