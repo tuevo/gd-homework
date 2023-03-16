@@ -48,7 +48,7 @@ export enum GdCalculationType {
     MinRevenueAcrossDiffProducts = "2",
 }
 export interface IGdCalculateTotalRevenueUtilArgs {
-    dataPoints?: DataPoint[];
+    dataPoints: DataPoint[];
     calculationType: GdCalculationType;
 }
 export const gdCalculationUtils = {

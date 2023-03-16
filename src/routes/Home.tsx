@@ -45,7 +45,11 @@ const Home: React.FC = () => {
         GdCalculationType.MaxRevenueAcrossDiffProducts,
     );
     const totalRevenue = useMemo(
-        () => gdCalculationUtils.calculateTotalRevenue({ dataPoints, calculationType: selectedCalculation }),
+        () =>
+            gdCalculationUtils.calculateTotalRevenue({
+                dataPoints: dataPoints || [],
+                calculationType: selectedCalculation,
+            }),
         [selectedCalculation, dataPoints],
     );
 
