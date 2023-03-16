@@ -1,9 +1,4 @@
-import {
-    DataPoint,
-    LoadingComponent,
-    NullableFiltersOrPlaceholders,
-    useExecutionDataView,
-} from "@gooddata/sdk-ui";
+import { DataPoint, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
 import { LineChart } from "@gooddata/sdk-ui-charts";
 import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
 import { Card, Col, Row, Select, Typography } from "antd";
@@ -14,15 +9,8 @@ import Page from "../components/Page";
 import { useAuth } from "../contexts/Auth";
 import { AuthStatus } from "../contexts/Auth/state";
 import * as Md from "../md/full";
-import { gdChartUtils } from "../utils";
+import { GdCalculationType, gdCalculationUtils, gdChartUtils } from "../utils";
 import styles from "./Home.module.scss";
-
-type RevenueData = { formattedValue: string; value: number };
-
-enum CalculationType {
-    MaxRevenueAcrossDiffProducts = "1",
-    MinRevenueAcrossDiffProducts = "2",
-}
 
 const Home: React.FC = () => {
     // Date Filter data
@@ -31,7 +19,7 @@ const Home: React.FC = () => {
         excludeCurrentPeriod: false,
     });
     const { selectedFilterOption } = filter;
-    const filters: NullableFiltersOrPlaceholders = useMemo(
+    const filters = useMemo(
         () =>
             gdChartUtils.createFilters({
                 dateDataSet: Md.DateDatasets.Date,
@@ -53,56 +41,15 @@ const Home: React.FC = () => {
         },
     });
     const [dataPoints, setDataPoints] = useState<DataPoint[] | undefined>();
-    const [selectedCalculation, setSelectedCalculation] = useState<CalculationType>(
-        CalculationType.MaxRevenueAcrossDiffProducts,
+    const [selectedCalculation, setSelectedCalculation] = useState<GdCalculationType>(
+        GdCalculationType.MaxRevenueAcrossDiffProducts,
     );
-    const totalRevenue: RevenueData | undefined = useMemo(() => {
-        const points = (dataPoints || []).filter((p) => p.rawValue !== null && p.formattedValue() !== null);
-        if (!points.length) {
-            return undefined;
-        }
+    const totalRevenue = useMemo(
+        () => gdCalculationUtils.calculateTotalRevenue({ dataPoints, calculationType: selectedCalculation }),
+        [selectedCalculation, dataPoints],
+    );
 
-        if (
-            [
-                CalculationType.MaxRevenueAcrossDiffProducts,
-                CalculationType.MinRevenueAcrossDiffProducts,
-            ].includes(selectedCalculation)
-        ) {
-            let revenue: RevenueData = {
-                value: +points[0].rawValue!.toString(),
-                formattedValue: points[0].formattedValue()!,
-            };
-
-            for (const p of points) {
-                const value = +p.rawValue!.toString();
-                const formattedValue = p.formattedValue()!;
-
-                let comparator = false;
-                switch (selectedCalculation) {
-                    case CalculationType.MaxRevenueAcrossDiffProducts:
-                        comparator = value > revenue.value;
-                        break;
-
-                    case CalculationType.MinRevenueAcrossDiffProducts:
-                        comparator = value < revenue.value;
-                        break;
-
-                    default:
-                        break;
-                }
-
-                if (comparator) {
-                    revenue = { value, formattedValue };
-                }
-            }
-
-            return revenue;
-        }
-
-        return undefined;
-    }, [selectedCalculation, dataPoints]);
-
-    const onCalculationChanged = (value: CalculationType) => {
+    const onCalculationChanged = (value: GdCalculationType) => {
         setSelectedCalculation(value);
     };
 
@@ -168,16 +115,16 @@ const Home: React.FC = () => {
                                         </Typography.Title>
                                         <div className={styles.calculationSelectWrapper}>
                                             <Select
-                                                defaultValue={CalculationType.MaxRevenueAcrossDiffProducts}
+                                                defaultValue={GdCalculationType.MaxRevenueAcrossDiffProducts}
                                                 style={{ width: "100%" }}
                                                 onChange={onCalculationChanged}
                                                 options={[
                                                     {
-                                                        value: CalculationType.MaxRevenueAcrossDiffProducts,
+                                                        value: GdCalculationType.MaxRevenueAcrossDiffProducts,
                                                         label: "Maximum Revenue across different products",
                                                     },
                                                     {
-                                                        value: CalculationType.MinRevenueAcrossDiffProducts,
+                                                        value: GdCalculationType.MinRevenueAcrossDiffProducts,
                                                         label: "Minimum Revenue across different products",
                                                     },
                                                 ]}
