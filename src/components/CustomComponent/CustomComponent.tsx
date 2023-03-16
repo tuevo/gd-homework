@@ -1,12 +1,14 @@
 import { LoadingComponent } from "@gooddata/sdk-ui";
-import { Card, Select, Typography } from "antd";
+import { Card } from "antd";
 import { GdCalculationType } from "../../utils";
+import { CalculationSelect } from "./CalculationSelect";
 import styles from "./CustomComponent.module.scss";
+import { TotalRevenue } from "./TotalRevenue";
 
 interface IProps {
     status: "loading" | "success" | "pending" | "error";
     totalRevenue?: string;
-    onCalculationChanged?: (value: GdCalculationType) => void;
+    onCalculationChanged?: (type: GdCalculationType) => void;
 }
 
 export const CustomComponent = ({ status, totalRevenue, onCalculationChanged }: IProps) => {
@@ -16,25 +18,11 @@ export const CustomComponent = ({ status, totalRevenue, onCalculationChanged }: 
                 {status === "loading" && <LoadingComponent />}
                 {status !== "loading" && (
                     <>
-                        <Typography.Title>
-                            {status === "success" && totalRevenue !== undefined ? totalRevenue : "N/A"}
-                        </Typography.Title>
+                        <TotalRevenue
+                            value={status === "success" && totalRevenue !== undefined ? totalRevenue : "N/A"}
+                        />
                         <div className={styles.calculationSelectWrapper}>
-                            <Select
-                                defaultValue={GdCalculationType.MaxRevenueAcrossDiffProducts}
-                                style={{ width: "100%" }}
-                                onChange={onCalculationChanged}
-                                options={[
-                                    {
-                                        value: GdCalculationType.MaxRevenueAcrossDiffProducts,
-                                        label: "Maximum Revenue across different products",
-                                    },
-                                    {
-                                        value: GdCalculationType.MinRevenueAcrossDiffProducts,
-                                        label: "Minimum Revenue across different products",
-                                    },
-                                ]}
-                            />
+                            <CalculationSelect onChange={onCalculationChanged} />
                         </div>
                     </>
                 )}
