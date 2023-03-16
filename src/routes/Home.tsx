@@ -1,5 +1,10 @@
-import { newRelativeDateFilter } from "@gooddata/sdk-model";
-import { DataPoint, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
+import { newAbsoluteDateFilter, newRelativeDateFilter } from "@gooddata/sdk-model";
+import {
+    DataPoint,
+    LoadingComponent,
+    NullableFiltersOrPlaceholders,
+    useExecutionDataView,
+} from "@gooddata/sdk-ui";
 import { LineChart } from "@gooddata/sdk-ui-charts";
 import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
 import { Card, Col, Row, Select, Typography } from "antd";
@@ -26,17 +31,39 @@ const Home: React.FC = () => {
         excludeCurrentPeriod: false,
     });
     const { selectedFilterOption } = filter;
-    const filters =
-        !selectedFilterOption || selectedFilterOption?.type === "allTime"
-            ? []
-            : [
-                  newRelativeDateFilter(
-                      Md.DateDatasets.Date,
-                      "GDC.time.month",
-                      selectedFilterOption.from as number,
-                      selectedFilterOption.to as number,
-                  ),
-              ];
+    const filters: NullableFiltersOrPlaceholders = useMemo(() => {
+        if (!selectedFilterOption) {
+            return [];
+        }
+
+        const type = selectedFilterOption?.type;
+        const dateDataSet = Md.DateDatasets.Date;
+
+        if (type === "absoluteForm") {
+            const absoluteFormFrom = selectedFilterOption.from;
+            const absoluteFormTo = selectedFilterOption.to;
+            if (absoluteFormFrom !== undefined && absoluteFormTo !== undefined) {
+                return [newAbsoluteDateFilter(dateDataSet, absoluteFormFrom, absoluteFormTo)];
+            }
+        } else if (type === "relativeForm" || type === "relativePreset") {
+            const relativeFormFrom = selectedFilterOption.from;
+            const relativeFormTo = selectedFilterOption.to;
+            const granularity = selectedFilterOption.granularity;
+
+            if (relativeFormFrom !== undefined && relativeFormTo !== undefined && granularity) {
+                return [
+                    newRelativeDateFilter(
+                        dateDataSet,
+                        granularity,
+                        selectedFilterOption.from as number,
+                        selectedFilterOption.to as number,
+                    ),
+                ];
+            }
+        }
+
+        return [];
+    }, [selectedFilterOption]);
 
     const titleSuffix = selectedFilterOption
         ? DateFilterHelpers.getDateFilterTitle(selectedFilterOption, "en-US")
