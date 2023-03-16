@@ -1,4 +1,3 @@
-import { newAbsoluteDateFilter, newRelativeDateFilter } from "@gooddata/sdk-model";
 import {
     DataPoint,
     LoadingComponent,
@@ -15,6 +14,7 @@ import Page from "../components/Page";
 import { useAuth } from "../contexts/Auth";
 import { AuthStatus } from "../contexts/Auth/state";
 import * as Md from "../md/full";
+import { gdChartUtils } from "../utils";
 import styles from "./Home.module.scss";
 
 type RevenueData = { formattedValue: string; value: number };
@@ -31,39 +31,14 @@ const Home: React.FC = () => {
         excludeCurrentPeriod: false,
     });
     const { selectedFilterOption } = filter;
-    const filters: NullableFiltersOrPlaceholders = useMemo(() => {
-        if (!selectedFilterOption) {
-            return [];
-        }
-
-        const type = selectedFilterOption?.type;
-        const dateDataSet = Md.DateDatasets.Date;
-
-        if (type === "absoluteForm") {
-            const absoluteFormFrom = selectedFilterOption.from;
-            const absoluteFormTo = selectedFilterOption.to;
-            if (absoluteFormFrom !== undefined && absoluteFormTo !== undefined) {
-                return [newAbsoluteDateFilter(dateDataSet, absoluteFormFrom, absoluteFormTo)];
-            }
-        } else if (type === "relativeForm" || type === "relativePreset") {
-            const relativeFormFrom = selectedFilterOption.from;
-            const relativeFormTo = selectedFilterOption.to;
-            const granularity = selectedFilterOption.granularity;
-
-            if (relativeFormFrom !== undefined && relativeFormTo !== undefined && granularity) {
-                return [
-                    newRelativeDateFilter(
-                        dateDataSet,
-                        granularity,
-                        selectedFilterOption.from as number,
-                        selectedFilterOption.to as number,
-                    ),
-                ];
-            }
-        }
-
-        return [];
-    }, [selectedFilterOption]);
+    const filters: NullableFiltersOrPlaceholders = useMemo(
+        () =>
+            gdChartUtils.createFilters({
+                dateDataSet: Md.DateDatasets.Date,
+                dateFilterOption: selectedFilterOption,
+            }),
+        [selectedFilterOption],
+    );
 
     const titleSuffix = selectedFilterOption
         ? DateFilterHelpers.getDateFilterTitle(selectedFilterOption, "en-US")
