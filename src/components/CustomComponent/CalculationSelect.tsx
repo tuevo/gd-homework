@@ -1,4 +1,5 @@
 import { Select } from "antd";
+import { useTranslation } from "react-i18next";
 import { GdCalculationType } from "../../utils";
 
 interface IProps {
@@ -6,6 +7,8 @@ interface IProps {
 }
 
 export const CalculationSelect = ({ onChange }: IProps) => {
+    const { t } = useTranslation();
+
     return (
         <Select
             defaultValue={GdCalculationType.MaxRevenueAcrossDiffProducts}
@@ -14,11 +17,11 @@ export const CalculationSelect = ({ onChange }: IProps) => {
             options={[
                 {
                     value: GdCalculationType.MaxRevenueAcrossDiffProducts,
-                    label: "Maximum Revenue across different products",
+                    label: t("maxRevenueAcrossDifProducts"),
                 },
                 {
                     value: GdCalculationType.MinRevenueAcrossDiffProducts,
-                    label: "Minimum Revenue across different products",
+                    label: t("minRevenueAcrossDifProducts"),
                 },
             ]}
         />

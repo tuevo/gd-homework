@@ -1,6 +1,7 @@
 // (C) 2007-2022 GoodData Corporation
 import { DateFilterGranularity } from "@gooddata/sdk-model";
 import { DateFilter, DateFilterOption, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
+import { useTranslation } from "react-i18next";
 
 const availableGranularities: DateFilterGranularity[] = [
     "GDC.time.date",
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export const CustomDateFilter = ({ filter, setFilter }: Props) => {
+    const { t } = useTranslation();
     const { excludeCurrentPeriod, selectedFilterOption } = filter;
     const onApply = (selectedFilterOption: DateFilterOption, excludeCurrentPeriod: boolean) => {
         setFilter({
@@ -35,7 +37,7 @@ export const CustomDateFilter = ({ filter, setFilter }: Props) => {
                 selectedFilterOption={selectedFilterOption}
                 filterOptions={defaultDateFilterOptions}
                 availableGranularities={availableGranularities}
-                customFilterName="Date Filter"
+                customFilterName={t("dateFilter").toString()}
                 dateFilterMode="active"
                 onApply={onApply}
             />

@@ -3,6 +3,7 @@ import { LineChart } from "@gooddata/sdk-ui-charts";
 import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
 import { Card, Col, Row, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import { CustomDateFilter, CustomDateFilterData } from "../components/controls/CustomDateFilter";
 import { CustomComponent } from "../components/CustomComponent/CustomComponent";
@@ -14,6 +15,8 @@ import { GdCalculationType, gdCalculationUtils, gdChartUtils } from "../utils";
 import styles from "./Home.module.scss";
 
 const Home: React.FC = () => {
+    const { t } = useTranslation();
+
     // Date Filter data
     const [filter, setFilter] = useState<CustomDateFilterData>({
         selectedFilterOption: defaultDateFilterOptions.allTime,
@@ -75,14 +78,16 @@ const Home: React.FC = () => {
         return (
             <Page>
                 <Typography.Title>
-                    <Link to="/login">Login</Link> to My Dashboard
+                    <Link to="/login">{t("login")}</Link> {t("to").toLowerCase()} {t("myDashboard")}
                 </Typography.Title>
             </Page>
         );
 
     return (
         <Page>
-            <Typography.Title>My Dashboard {titleSuffix}</Typography.Title>
+            <Typography.Title>
+                {t("myDashboard")} {titleSuffix}
+            </Typography.Title>
 
             <Card size="small">
                 <CustomDateFilter
