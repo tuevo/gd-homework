@@ -23,15 +23,12 @@ export const gdChartUtils = {
         const { dateDataSet } = args;
         const type = dateFilterOption?.type;
         if (type === "absoluteForm") {
-            const from = dateFilterOption.from;
-            const to = dateFilterOption.to;
+            const { from, to } = dateFilterOption;
             if (from !== undefined && to !== undefined) {
                 return [newAbsoluteDateFilter(dateDataSet, from, to)];
             }
         } else if (type === "relativeForm" || type === "relativePreset") {
-            const from = dateFilterOption.from;
-            const to = dateFilterOption.to;
-            const granularity = dateFilterOption.granularity;
+            const { granularity, from, to } = dateFilterOption;
             if (from !== undefined && to !== undefined && granularity) {
                 return [newRelativeDateFilter(dateDataSet, granularity, +from, +to)];
             }
