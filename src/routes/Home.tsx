@@ -1,10 +1,11 @@
-import { DataPoint, LoadingComponent, useExecutionDataView } from "@gooddata/sdk-ui";
+import { DataPoint, useExecutionDataView } from "@gooddata/sdk-ui";
 import { LineChart } from "@gooddata/sdk-ui-charts";
 import { DateFilterHelpers, defaultDateFilterOptions } from "@gooddata/sdk-ui-filters";
-import { Card, Col, Row, Select, Typography } from "antd";
+import { Card, Col, Row, Typography } from "antd";
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { CustomDateFilter, CustomDateFilterData } from "../components/controls/CustomDateFilter";
+import { CustomComponent } from "../components/CustomComponent/CustomComponent";
 import Page from "../components/Page";
 import { useAuth } from "../contexts/Auth";
 import { AuthStatus } from "../contexts/Auth/state";
@@ -74,7 +75,7 @@ const Home: React.FC = () => {
         return (
             <Page>
                 <Typography.Title>
-                    <Link to="/login">Login</Link> to Analytical Dashboard
+                    <Link to="/login">Login</Link> to My Dashboard
                 </Typography.Title>
             </Page>
         );
@@ -107,37 +108,11 @@ const Home: React.FC = () => {
                     </Col>
 
                     <Col span={24} lg={8}>
-                        <Card bodyStyle={{ height: "100%" }} className={styles.customComponentWrapper}>
-                            <div className={styles.inner}>
-                                {status === "loading" && <LoadingComponent />}
-                                {status !== "loading" && (
-                                    <>
-                                        <Typography.Title>
-                                            {status === "success" && totalRevenue !== undefined
-                                                ? totalRevenue.formattedValue
-                                                : "N/A"}
-                                        </Typography.Title>
-                                        <div className={styles.calculationSelectWrapper}>
-                                            <Select
-                                                defaultValue={GdCalculationType.MaxRevenueAcrossDiffProducts}
-                                                style={{ width: "100%" }}
-                                                onChange={onCalculationChanged}
-                                                options={[
-                                                    {
-                                                        value: GdCalculationType.MaxRevenueAcrossDiffProducts,
-                                                        label: "Maximum Revenue across different products",
-                                                    },
-                                                    {
-                                                        value: GdCalculationType.MinRevenueAcrossDiffProducts,
-                                                        label: "Minimum Revenue across different products",
-                                                    },
-                                                ]}
-                                            />
-                                        </div>
-                                    </>
-                                )}
-                            </div>
-                        </Card>
+                        <CustomComponent
+                            status={status}
+                            totalRevenue={totalRevenue?.formattedValue}
+                            onCalculationChanged={onCalculationChanged}
+                        />
                     </Col>
                 </Row>
             </div>

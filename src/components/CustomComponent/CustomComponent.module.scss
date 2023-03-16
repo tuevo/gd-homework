@@ -1,0 +1,14 @@
+.customComponentWrapper {
+    height: 425px;
+
+    .inner {
+        display: flex;
+        height: 100%;
+        flex-direction: column;
+        justify-content: space-between;
+
+        .calculationSelectWrapper {
+            margin-bottom: 45px;
+        }
+    }
+}
